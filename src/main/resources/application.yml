@@ -1,0 +1,7 @@
+server:
+  port: 8080
+
+telegram:
+  api-base: https://api.telegram.org
+  bot-token: 8386103559:AAFbTGtlff8xLdjY6PqtYM1oG0_8AIo6IB4
+  webhook-secret: tg-secret-9f3c1d-2025
