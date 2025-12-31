@@ -5,3 +5,16 @@ telegram:
   api-base: https://api.telegram.org
   bot-token: 8386103559:AAFbTGtlff8xLdjY6PqtYM1oG0_8AIo6IB4
   webhook-secret: tg-secret-9f3c1d-2025
+
+aliexpress:
+  # IMPORTANT: Set to TRUE when testing from HOME (without corporate proxy/VPN)
+  # Set to FALSE when at work (behind Netskope/corporate proxy)
+  # The Taobao API gateway is likely blocked by your company's network
+  enabled: true
+  # Taobao/AliExpress API Gateway
+  gateway: https://gw.api.taobao.com/router/rest
+  # Real API credentials (these are valid!)
+  app-key: 520562
+  app-secret: wibsH9ywiDdIwrsorC02We3x2pzqBCXi
+  # Affiliate tracking ID
+  tracking-id: bot_hatzayed
