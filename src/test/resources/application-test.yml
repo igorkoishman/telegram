@@ -3,7 +3,7 @@ server:
 
 telegram:
   bot-token: test-token-for-ci
-  mode: polling
+  mode: webhook
   webhook-secret: test-secret
   api-base: https://api.telegram.org
   translation-api-base: http://localhost:8080
