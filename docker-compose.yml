@@ -1,0 +1,73 @@
+version: '3.8'
+
+# GPU version with Long Polling mode
+# No webhooks or Cloudflare Tunnel needed!
+services:
+  telegram-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ${DOCKER_USERNAME:-igorkoishman}/telegram-translator:latest
+    container_name: telegram-translator
+    restart: unless-stopped
+
+    # NVIDIA GPU support (requires nvidia-docker)
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+    ports:
+      - "8080:8080"
+
+    environment:
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_MODE=polling
+      - TELEGRAM_WEBHOOK_SECRET=${TELEGRAM_WEBHOOK_SECRET:-tg-secret-9f3c1d-2025}
+      - JAVA_OPTS=${JAVA_OPTS:--Xmx4g -Xms1g}
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-production}
+      # Model download configuration - lightweight startup
+      - TRANSLATION_MODELS_AUTO_DOWNLOAD=${TRANSLATION_MODELS_AUTO_DOWNLOAD:-true}
+      - TRANSLATION_MODELS_WHISPER_MODELS=${TRANSLATION_MODELS_WHISPER_MODELS:-tiny,small}
+      - TRANSLATION_MODELS_WHISPER_BACKENDS=${TRANSLATION_MODELS_WHISPER_BACKENDS:-faster-whisper,openai-whisper}
+      - TRANSLATION_MODELS_TRANSLATION_MODELS=${TRANSLATION_MODELS_TRANSLATION_MODELS:-m2m100,nllb}
+
+    volumes:
+      # Persistent cache for AI models (Hugging Face and OpenAI Whisper)
+      - whisper-cache:/root/.cache/whisper
+      - huggingface-cache:/root/.cache/huggingface
+      # Persistent storage for uploads and outputs
+      - telegram-uploads:/app/uploads
+      - telegram-outputs:/app/outputs
+      - telegram-downloads:/app/downloads
+      # Optional: Override config
+      - ./config/application-production.yml:/app/config/application.yml:ro
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+    networks:
+      - telegram-network
+
+volumes:
+  whisper-cache:
+    driver: local
+  huggingface-cache:
+    driver: local
+  telegram-uploads:
+    driver: local
+  telegram-outputs:
+    driver: local
+  telegram-downloads:
+    driver: local
+
+networks:
+  telegram-network:
+    driver: bridge

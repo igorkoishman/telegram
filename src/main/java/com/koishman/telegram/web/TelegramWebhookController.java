@@ -1,8 +1,9 @@
 package com.koishman.telegram.web;
 
-import com.koishman.telegram.service.TelegramBotService;
+import com.koishman.telegram.service.EnhancedTelegramBotService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -10,9 +11,10 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/telegram")
 @RequiredArgsConstructor
+@ConditionalOnProperty(name = "telegram.mode", havingValue = "webhook", matchIfMissing = false)
 public class TelegramWebhookController {
 
-    private final TelegramBotService botService;
+    private final EnhancedTelegramBotService botService;
 
     @PostMapping("/webhook")
     @ResponseStatus(HttpStatus.OK)

@@ -1,0 +1,59 @@
+version: '3.8'
+
+# CPU-only version (no GPU required)
+# Long Polling mode - No webhooks or Cloudflare Tunnel needed!
+services:
+  telegram-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile.cpu
+    image: ${DOCKER_USERNAME:-igorkoishman}/telegram-translator:latest-cpu
+    container_name: telegram-translator-cpu
+    restart: unless-stopped
+
+    ports:
+      - "8080:8080"
+
+    environment:
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_MODE=polling
+      - TELEGRAM_WEBHOOK_SECRET=${TELEGRAM_WEBHOOK_SECRET:-tg-secret-9f3c1d-2025}
+      - JAVA_OPTS=-Xmx4g -Xms1g
+      - SPRING_PROFILES_ACTIVE=production
+      # Model download configuration - lightweight startup
+      - TRANSLATION_MODELS_AUTO_DOWNLOAD=${TRANSLATION_MODELS_AUTO_DOWNLOAD:-true}
+      - TRANSLATION_MODELS_WHISPER_MODELS=${TRANSLATION_MODELS_WHISPER_MODELS:-tiny,small}
+      - TRANSLATION_MODELS_WHISPER_BACKENDS=${TRANSLATION_MODELS_WHISPER_BACKENDS:-faster-whisper,openai-whisper}
+      - TRANSLATION_MODELS_TRANSLATION_MODELS=${TRANSLATION_MODELS_TRANSLATION_MODELS:-m2m100,nllb}
+
+    volumes:
+      # Persistent storage for models (avoid re-downloading)
+      - telegram-models:/app/models
+      # Persistent storage for uploads and outputs
+      - telegram-uploads:/app/uploads
+      - telegram-outputs:/app/outputs
+      - telegram-downloads:/app/downloads
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+    networks:
+      - telegram-network
+
+volumes:
+  telegram-models:
+    driver: local
+  telegram-uploads:
+    driver: local
+  telegram-outputs:
+    driver: local
+  telegram-downloads:
+    driver: local
+
+networks:
+  telegram-network:
+    driver: bridge
