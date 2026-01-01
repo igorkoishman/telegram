@@ -1,0 +1,23 @@
+server:
+  port: 8080
+
+telegram:
+  bot-token: test-token-for-ci
+  mode: polling
+  webhook-secret: test-secret
+  api-base: https://api.telegram.org
+  translation-api-base: http://localhost:8080
+  temp-download-dir: ./downloads
+
+translation:
+  storage:
+    upload-dir: ./uploads
+    output-dir: ./outputs
+  python:
+    executable: python3
+    scripts-dir: src/main/resources/python
+  models:
+    auto-download: false
+    whisper-models: tiny
+    whisper-backends: faster-whisper
+    translation-models: m2m100
