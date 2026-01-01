@@ -85,11 +85,16 @@ $RECYCLE.BIN/
 .Trash-*
 .nfs*
 
-# Application specific
+# Application specific - Secrets and local config
 application-local.yml
 application-local.properties
+
+# Environment files with secrets (NEVER commit these!)
+.env
+.env.local
+.env.*.local
 *.env
-*.env.local
+!.env.example
 
 # Logs
 logs/
@@ -116,6 +121,18 @@ spring-boot-devtools.properties
 # Build artifacts
 build/
 dist/
+
+# Application data directories (videos, uploads, models)
+uploads/
+outputs/
+downloads/
+models/
+*.mp4
+*.mkv
+*.avi
+*.mov
+*.srt
+*.wav
 
 # IDE specific
 *.launch

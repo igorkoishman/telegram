@@ -13,4 +13,6 @@ public class TelegramBotConfig {
     private String apiBase;
     private String botToken;
     private String webhookSecret;
+    private String translationApiBase;
+    private String tempDownloadDir = "./downloads";
 }

@@ -1,7 +1,29 @@
 server:
   port: 8080
 
+spring:
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+
 telegram:
   api-base: https://api.telegram.org
-  bot-token: 8386103559:AAFbTGtlff8xLdjY6PqtYM1oG0_8AIo6IB4
-  webhook-secret: tg-secret-9f3c1d-2025
+  bot-token: ${TELEGRAM_BOT_TOKEN:8386103559:AAFbTGtlff8xLdjY6PqtYM1oG0_8AIo6IB4}
+  mode: ${TELEGRAM_MODE:polling}
+  webhook-secret: ${TELEGRAM_WEBHOOK_SECRET:tg-secret-9f3c1d-2025}
+  translation-api-base: http://localhost:8080
+  temp-download-dir: ./downloads
+
+translation:
+  storage:
+    upload-dir: ./uploads
+    output-dir: ./outputs
+  python:
+    executable: /Users/ikoishman/IdeaProjects/telegram/venv/bin/python3
+    scripts-dir: src/main/resources/python
+  models:
+    auto-download: true
+    whisper-models: tiny,small
+    whisper-backends: faster-whisper,openai-whisper
+    translation-models: m2m100
