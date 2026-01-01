@@ -1,283 +1,357 @@
 # Telegram Video Translation Bot
 
-A hybrid Spring Boot + Python application that provides AI-powered video subtitle generation and translation through a Telegram bot interface.
+AI-powered Telegram bot that transcribes, translates, and adds subtitles to videos automatically.
 
 ## Features
 
-✨ **AI-Powered Transcription**
-- Whisper AI for accurate speech-to-text
-- Multiple model sizes (tiny to large)
-- 99+ language support
+- 🎙️ **AI Transcription** - Whisper AI converts speech to text in 99+ languages
+- 🌍 **Multi-Language Translation** - Translate to 8 languages (English, Spanish, French, German, Italian, Russian, Hebrew, Arabic)
+- 📹 **Flexible Subtitles** - Hard-burned, soft subtitles, or both
+- 🤖 **Interactive Bot** - Easy-to-use Telegram interface with inline keyboards
+- ⚡ **Two Deployment Modes** - Long Polling (no setup) or Webhooks (production)
+- 🐳 **Docker Ready** - One command deployment with Docker Compose
 
-🌍 **Multi-Language Translation**
-- M2M100 neural machine translation
-- 8 core languages: English, Spanish, French, German, Italian, Russian, Hebrew, Arabic
-- Batch translation for multiple target languages
+---
 
-📹 **Flexible Subtitle Formats**
-- Hard-burned subtitles (embedded in video)
-- Soft subtitles (separate tracks, toggle-able)
-- Both formats simultaneously
+## Quick Start (Choose Your Path)
 
-🎬 **Media Processing**
-- FFmpeg-based video processing
-- Multi-track audio/subtitle detection
-- Automatic audio extraction
-
-🤖 **Telegram Bot Integration**
-- Interactive menu system with inline keyboards
-- Real-time progress updates
-- Automatic file delivery
-
-## Quick Start
-
-### 1. Prerequisites Check
+### Path 1: Long Polling Mode (Recommended for Beginners)
+**Perfect for:** Personal use, testing, home networks
+**Pros:** No domain, no SSL, no Cloudflare - just works!
+**Time:** 5 minutes
 
 ```bash
-./test-setup.sh
+# 1. Get your bot token from @BotFather on Telegram
+
+# 2. Create environment file
+cp .env.example .env
+# Edit .env and add your TELEGRAM_BOT_TOKEN
+
+# 3. Start the bot (CPU-only, works on any computer)
+docker-compose -f docker-compose.cpu.yml up -d
+
+# 4. Test it! Open Telegram and send /start to your bot
 ```
 
-### 2. Install Python Dependencies
+That's it! See [LONG_POLLING_SETUP.md](LONG_POLLING_SETUP.md) for details.
+
+---
+
+### Path 2: Webhook Mode (Production)
+**Perfect for:** High-traffic bots, multiple users, instant responses
+**Requirements:** Domain name, Cloudflare Tunnel
+**Time:** 15 minutes
+
+See [CLOUDFLARE_TUNNEL_SETUP.md](CLOUDFLARE_TUNNEL_SETUP.md) for complete guide.
+
+---
+
+## System Requirements
+
+### Minimum (CPU-only)
+- 4GB RAM
+- 20GB free disk space (for AI models)
+- Docker & Docker Compose
+- Internet connection
+
+### Recommended (with GPU)
+- NVIDIA GPU with 6GB+ VRAM
+- 16GB RAM
+- 30GB free disk space
+- NVIDIA drivers + CUDA Toolkit
+- Docker with nvidia-docker support
+
+---
+
+## Documentation Guide
+
+**Start Here:**
+1. [LONG_POLLING_SETUP.md](LONG_POLLING_SETUP.md) - Easiest way to get started (no webhooks)
+2. [MODEL_DOWNLOAD_GUIDE.md](MODEL_DOWNLOAD_GUIDE.md) - Configure which AI models to download
+
+**Production Deployment:**
+3. [CLOUDFLARE_TUNNEL_SETUP.md](CLOUDFLARE_TUNNEL_SETUP.md) - Webhook mode with Cloudflare
+4. [DOCKER_DEPLOYMENT.md](DOCKER_DEPLOYMENT.md) - Complete Docker deployment guide
+
+**Reference:**
+- [BUILD_AND_RUN.md](BUILD_AND_RUN.md) - Quick command reference
+- [SETUP_CHECKLIST.md](SETUP_CHECKLIST.md) - Deployment checklist
+
+---
+
+## Deployment Comparison
+
+| Feature | Long Polling | Webhooks |
+|---------|-------------|----------|
+| **Setup Time** | 5 minutes | 15 minutes |
+| **Requirements** | Bot token only | Bot token + domain + Cloudflare |
+| **Cost** | 100% Free | ~$10/year (domain) |
+| **Best For** | Personal use, testing | Production, high traffic |
+| **Network** | Works anywhere | Needs public URL |
+| **Latency** | 1-2 seconds | Instant |
+| **Current Mode** | ✅ **This is active by default** | Requires configuration |
+
+---
+
+## How to Use the Bot
+
+1. **Send a video** to your bot on Telegram
+2. **Bot analyzes** the video and shows you options:
+   - Use existing subtitles or transcribe new ones
+   - Choose Whisper model size (tiny, small, medium, large)
+   - Select target languages
+   - Pick subtitle format (hard-burned, soft, or both)
+3. **Bot processes** your video (2-10 minutes depending on length)
+4. **Receive** translated videos and SRT subtitle files
+
+---
+
+## Configuration
+
+### Basic Setup (.env file)
+
+```env
+# Required: Your bot token from @BotFather
+TELEGRAM_BOT_TOKEN=your_token_here
+
+# Choose mode: 'polling' (default, no setup) or 'webhook' (requires domain)
+TELEGRAM_MODE=polling
+
+# Optional: Webhook secret (only needed for webhook mode)
+TELEGRAM_WEBHOOK_SECRET=your_random_secret
+
+# Optional: Which models to download on startup (default: tiny,small)
+TRANSLATION_MODELS_WHISPER_MODELS=tiny,small
+TRANSLATION_MODELS_WHISPER_BACKENDS=faster-whisper,openai-whisper
+TRANSLATION_MODELS_TRANSLATION_MODELS=m2m100
+```
+
+### Model Selection
+
+**On Startup:** Only downloads tiny and small models (~500MB total) for fast startup
+**On Demand:** Larger models (medium, large) download when you first use them
+
+| Model | Size | Speed | Quality | Best For |
+|-------|------|-------|---------|----------|
+| tiny | 75MB | ⚡⚡⚡ Fast | Basic | Testing |
+| small | 460MB | ⚡⚡ Medium | Good | Quick jobs |
+| medium | 1.5GB | ⚡ Slow | Great | Balanced |
+| large-v3 | 3GB | 🐌 Very Slow | Best | Best quality |
+
+See [MODEL_DOWNLOAD_GUIDE.md](MODEL_DOWNLOAD_GUIDE.md) for details.
+
+---
+
+## Platform Support
+
+### CPU-Only (Any System)
+```bash
+docker-compose -f docker-compose.cpu.yml up -d
+```
+**Works on:** Mac, Windows, Linux, Raspberry Pi
+
+### GPU-Accelerated (NVIDIA only)
+```bash
+docker-compose up -d
+```
+**Works on:** Linux with NVIDIA GPU, Windows WSL2 with NVIDIA
+
+**Note:** GPU processing is 5-10x faster than CPU.
+
+---
+
+## Common Commands
 
 ```bash
-pip3 install -r src/main/resources/python/requirements.txt
+# Start bot (Long Polling, CPU-only)
+docker-compose -f docker-compose.cpu.yml up -d
+
+# View logs
+docker logs telegram-translator-cpu -f
+
+# Stop bot
+docker-compose -f docker-compose.cpu.yml down
+
+# Restart bot
+docker-compose -f docker-compose.cpu.yml restart
+
+# Check status
+docker ps
+curl http://localhost:8080/actuator/health
 ```
 
-This will install:
-- faster-whisper (Whisper AI)
-- transformers (Translation models)
-- torch (PyTorch)
-- sentencepiece & sacremoses (Tokenization)
+---
 
-### 3. Build and Run
+## Troubleshooting
 
+### Bot doesn't respond
 ```bash
-# Build
-./mvnw clean install
+# Check if container is running
+docker ps
 
-# Run
-./mvnw spring-boot:run
+# Check logs for errors
+docker logs telegram-translator-cpu
+
+# Verify bot token
+cat .env | grep TELEGRAM_BOT_TOKEN
 ```
 
-The application will start on `http://localhost:8080`
+### Models download slowly
+First download takes 5-10 minutes (tiny+small models ~500MB).
+Subsequent startups are instant (models are cached).
 
-### 4. Set Up Telegram Webhook
-
-You need to expose your local server to the internet. Use one of:
-
-**Option A: Cloudflare Tunnel (Recommended)**
-```bash
-cloudflared tunnel --url http://localhost:8080
+### Out of memory
+Edit `.env` and reduce memory:
+```env
+JAVA_OPTS=-Xmx2g -Xms512m
 ```
 
-**Option B: ngrok**
-```bash
-ngrok http 8080
-```
+### Need faster processing
+- Use GPU version (5-10x faster)
+- Use smaller model (tiny instead of large)
+- Reduce video resolution before uploading
 
-Then set the webhook:
-```bash
-curl -X POST "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook" \
-  -H "Content-Type: application/json" \
-  -d '{"url": "https://your-tunnel-url.com/telegram/webhook"}'
-```
+---
 
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                  Spring Boot (Port 8080)                │
-│                                                         │
-│  ┌──────────────┐         ┌────────────────────┐       │
-│  │ Telegram Bot │ ◄─────► │ Translation API    │       │
-│  │ /telegram/*  │         │ /api/translation/* │       │
-│  └──────────────┘         └─────────┬──────────┘       │
-│                                     │                  │
-│                    ┌────────────────┴────────────┐     │
-│                    │                              │     │
-│            ┌───────▼──────┐              ┌────────▼────┐│
-│            │ FFmpeg       │              │ Python AI   ││
-│            │ (Java)       │              │ (Subprocess)││
-│            └──────────────┘              └─────────────┘│
-│            • Extract audio                • Whisper AI  │
-│            • Burn subs                    • Translation │
-│            • Mux tracks                                 │
-└─────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────┐
+│            Telegram Bot (Docker Container)          │
+│                                                     │
+│  Mode 1: Long Polling (Default)                    │
+│  ┌────────────┐                                     │
+│  │ Your Bot   │ ←─── Asks Telegram servers         │
+│  │            │ ───→ Gets updates                   │
+│  └────────────┘                                     │
+│                                                     │
+│  Mode 2: Webhook (Optional)                        │
+│  ┌────────────┐   ┌──────────────┐                 │
+│  │ Your Bot   │ ← │ Cloudflare   │ ← Telegram      │
+│  │            │   │ Tunnel       │                 │
+│  └────────────┘   └──────────────┘                 │
+│                                                     │
+│  ┌──────────────────────────────────────┐           │
+│  │ Processing Pipeline                  │           │
+│  │ 1. FFmpeg extracts audio             │           │
+│  │ 2. Whisper AI transcribes speech     │           │
+│  │ 3. Translation AI translates text    │           │
+│  │ 4. FFmpeg burns/muxes subtitles      │           │
+│  └──────────────────────────────────────┘           │
+└─────────────────────────────────────────────────────┘
 ```
 
-## User Workflow
+---
 
-1. **Send Video** → User sends video file to bot
-2. **Analyze** → Bot analyzes existing audio/subtitle tracks
-3. **Choose Options** → Interactive menus for:
-   - Use existing subtitles OR transcribe new
-   - Whisper model size (if transcribing)
-   - Target languages
-   - Subtitle format (hard/soft/both)
-4. **Process** → Job submitted, real-time updates
-5. **Receive** → Bot sends back processed videos and SRT files
+## Tech Stack
 
-## API Endpoints
+- **Spring Boot 2.7** - Java application framework
+- **Python 3.11** - AI model runtime
+- **faster-whisper** - Speech-to-text transcription
+- **OpenAI Whisper** - Alternative transcription backend
+- **M2M100** - Neural machine translation
+- **FFmpeg** - Video/audio processing
+- **Docker** - Containerization
+- **Telegram Bot API** - Bot integration
 
-### Telegram Bot
-- `POST /telegram/webhook` - Receive updates from Telegram
-
-### Translation Service
-- `POST /api/translation/analyze` - Analyze media tracks
-- `POST /api/translation/upload` - Submit translation job
-- `GET /api/translation/status/{jobId}` - Check job status
-- `GET /api/translation/download/{filename}` - Download results
-
-## Configuration
-
-Edit `src/main/resources/application.yml`:
-
-```yaml
-telegram:
-  bot-token: YOUR_BOT_TOKEN_HERE
-  webhook-secret: YOUR_SECRET_HERE
-
-translation:
-  storage:
-    upload-dir: ./uploads
-    output-dir: ./outputs
-  python:
-    executable: python3
-```
-
-## Whisper Models
-
-| Model  | Size   | Speed | Accuracy | Use Case          |
-|--------|--------|-------|----------|-------------------|
-| tiny   | 140 MB | Fast  | Low      | Testing           |
-| base   | 290 MB | Fast  | Good     | Development       |
-| small  | 970 MB | Medium| Good     | Balanced          |
-| medium | 3.1 GB | Slow  | Better   | Production        |
-| large  | 6.2 GB | Slowest | Best   | Best quality      |
-
-Models download automatically on first use.
+---
 
 ## Supported Languages
 
-**Translation:** en, es, fr, de, it, ru, he, ar
-**Transcription:** 99+ languages (via Whisper)
+**Transcription (Whisper):** 99+ languages including English, Spanish, French, German, Italian, Russian, Hebrew, Arabic, Chinese, Japanese, Korean, and more.
+
+**Translation (M2M100):** English, Spanish, French, German, Italian, Russian, Hebrew, Arabic
+
+---
 
 ## Project Structure
 
 ```
-src/main/java/com/koishman/telegram/
-├── config/                   # Configuration classes
-├── model/                    # Telegram bot DTOs
-├── service/                  # Telegram bot services
-│   ├── EnhancedTelegramBotService.java
-│   ├── SessionManager.java
-│   ├── TelegramApiClient.java
-│   └── TranslationApiClient.java
-├── translation/              # Translation service
-│   ├── controller/
-│   │   └── TranslationController.java
-│   ├── model/
-│   │   ├── TranslationJob.java
-│   │   ├── SubtitleSegment.java
-│   │   └── ...
-│   └── service/
-│       ├── SubtitleProcessingService.java
-│       ├── WhisperService.java
-│       ├── TranslationService.java
-│       ├── FFmpegService.java
-│       └── ...
-└── web/
-    └── TelegramWebhookController.java
-
-src/main/resources/
-├── python/
-│   ├── whisper_transcribe.py
-│   ├── translate_text.py
-│   └── requirements.txt
-└── application.yml
+telegram/
+├── src/main/
+│   ├── java/com/koishman/telegram/
+│   │   ├── config/           # Spring configuration
+│   │   ├── service/          # Bot services
+│   │   │   ├── TelegramLongPollingService.java    # Polling mode
+│   │   │   └── EnhancedTelegramBotService.java    # Bot logic
+│   │   ├── translation/      # Translation service
+│   │   │   ├── service/
+│   │   │   │   ├── WhisperService.java            # Transcription
+│   │   │   │   ├── TranslationService.java        # Translation
+│   │   │   │   └── FFmpegService.java             # Video processing
+│   │   └── web/
+│   │       └── TelegramWebhookController.java     # Webhook mode
+│   └── resources/
+│       ├── python/           # AI Python scripts
+│       └── application.yml   # App configuration
+├── docker-compose.cpu.yml    # CPU-only deployment
+├── docker-compose.yml        # GPU deployment
+├── Dockerfile.cpu            # CPU Docker image
+├── Dockerfile                # GPU Docker image
+└── .env.example              # Environment template
 ```
 
-## Troubleshooting
+---
 
-### Python Dependencies
-```bash
-pip3 install -r src/main/resources/python/requirements.txt
-```
+## FAQ
 
-### FFmpeg Not Found
-```bash
-# macOS
-brew install ffmpeg
+**Q: Which mode should I use - Long Polling or Webhooks?**
+A: Start with Long Polling (default). It's simpler, free, and works everywhere. Switch to webhooks later if you need instant responses or high traffic.
 
-# Ubuntu/Debian
-sudo apt-get install ffmpeg
-```
+**Q: Do I need a domain name?**
+A: Not for Long Polling mode (default). Only needed for Webhook mode.
 
-### Out of Memory
-```bash
-# Increase heap size
-java -Xmx4g -jar target/telegram-0.0.1-SNAPSHOT.jar
+**Q: How much does it cost?**
+A: Long Polling mode is 100% free. Webhook mode costs ~$10/year for a domain.
 
-# Or use smaller Whisper models
-```
+**Q: Can I run this on my laptop?**
+A: Yes! Long Polling mode works on any computer with Docker.
 
-### Slow Processing
-- Use smaller Whisper model (tiny/base)
-- Reduce video resolution
-- Enable GPU if available (requires CUDA setup)
+**Q: Do I need a GPU?**
+A: No, but GPU makes processing 5-10x faster. CPU version works fine for personal use.
 
-## Development
+**Q: How long does video processing take?**
+A: With CPU: ~5-10 minutes per video. With GPU: ~1-2 minutes per video.
 
-### Run Tests
-```bash
-./mvnw test
-```
+**Q: Which Whisper model should I use?**
+A: Start with `small` for balanced speed/quality. Use `tiny` for testing, `large-v3` for best quality.
 
-### Build Production JAR
-```bash
-./mvnw clean package
-java -jar target/telegram-0.0.1-SNAPSHOT.jar
-```
-
-### Debug Mode
-```bash
-./mvnw spring-boot:run -Dspring-boot.run.jvmArguments="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005"
-```
-
-## Documentation
-
-- [Translation Service Setup Guide](TRANSLATION_SERVICE_SETUP.md) - Detailed setup instructions
-- [Python Translation Service Reference](/Users/ikoishman/PycharmProjects/translation) - Original Python implementation
-
-## Tech Stack
-
-- **Java 17** - Core application
-- **Spring Boot 3.4.1** - Web framework
-- **Python 3.8+** - AI/ML processing
-- **faster-whisper** - Speech-to-text
-- **HuggingFace Transformers** - Translation models
-- **FFmpeg** - Video processing
-- **Apache HttpClient 5** - HTTP communication
-- **Telegram Bot API** - Bot integration
+---
 
 ## Contributing
 
 1. Fork the repository
-2. Create feature branch
-3. Make changes
+2. Create a feature branch
+3. Make your changes
 4. Test thoroughly
-5. Submit pull request
+5. Submit a pull request
+
+---
 
 ## License
 
 [Add your license here]
 
+---
+
 ## Support
 
 For issues or questions:
-- Check logs: `tail -f logs/spring.log`
-- Verify setup: `./test-setup.sh`
-- Review documentation: `TRANSLATION_SERVICE_SETUP.md`
+- **Check logs:** `docker logs telegram-translator-cpu -f`
+- **Verify setup:** `curl http://localhost:8080/actuator/health`
+- **Review docs:** See documentation links above
+- **GitHub Issues:** Report bugs and request features
+
+---
+
+## What's Next?
+
+After getting your bot running:
+1. Try different Whisper models to find the right speed/quality balance
+2. Test with videos in different languages
+3. Experiment with soft vs hard subtitles
+4. Consider GPU deployment for faster processing
+5. Switch to webhook mode for production use
 
 ---
 
