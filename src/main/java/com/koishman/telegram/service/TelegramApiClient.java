@@ -104,6 +104,7 @@ public class TelegramApiClient {
         }
     }
 
+
     public void answerCallbackQuery(String callbackQueryId, String text) {
         String url = config.getApiBase() + "/bot" + config.getBotToken() + "/answerCallbackQuery";
 
