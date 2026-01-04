@@ -39,8 +39,8 @@ RUN pip3 install --no-cache-dir --upgrade pip setuptools wheel
 # Set working directory
 WORKDIR /app
 
-# Copy JAR from builder
-COPY --from=java-builder /build/target/telegram-0.0.1-SNAPSHOT.jar /app/app.jar
+# Copy JAR from builder (use wildcard to match any version)
+COPY --from=java-builder /build/target/telegram-*.jar /app/app.jar
 
 # Copy Python scripts and requirements
 COPY src/main/resources/python /app/python
