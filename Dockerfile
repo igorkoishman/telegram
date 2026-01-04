@@ -22,14 +22,20 @@ FROM nvidia/cuda:12.2.0-runtime-ubuntu22.04
 RUN apt-get update && apt-get install -y \
     openjdk-11-jre-headless \
     python3.11 \
+    python3.11-dev \
     python3-pip \
     ffmpeg \
     wget \
     curl \
+    build-essential \
+    git \
     && rm -rf /var/lib/apt/lists/*
 
 # Set Python 3.11 as default
 RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
+
+# Upgrade pip and install wheel
+RUN pip3 install --no-cache-dir --upgrade pip setuptools wheel
 
 # Set working directory
 WORKDIR /app
