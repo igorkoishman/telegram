@@ -26,8 +26,8 @@ public class TelegramLongPollingService {
 
     private final TelegramBotConfig config;
     private final EnhancedTelegramBotService botService;
+    private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private final RestTemplate restTemplate = new RestTemplate();
 
     private final AtomicBoolean running = new AtomicBoolean(false);
     private final AtomicLong lastUpdateId = new AtomicLong(0);

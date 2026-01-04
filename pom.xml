@@ -29,10 +29,16 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
-        <!-- Apache HttpClient for better SSL support -->
+        <!-- Apache HttpClient 5.x for translation/telegram API clients -->
         <dependency>
             <groupId>org.apache.httpcomponents.client5</groupId>
             <artifactId>httpclient5</artifactId>
+        </dependency>
+
+        <!-- Apache HttpClient 4.x for RestTemplate SSL support (compatible with Spring Boot 2.7) -->
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
         </dependency>
 
         <!-- Telegram Bot API -->
