@@ -86,7 +86,8 @@ public class TranslationApiClient {
                                    Boolean useSubtitlesOnly,
                                    String originalLanguage,
                                    Integer audioTrack,
-                                   Integer subtitleTrack) {
+                                   Integer subtitleTrack,
+                                   Long chatId) {
         String url = config.getTranslationApiBase() + "/api/translation/upload";
 
         try {
@@ -100,6 +101,10 @@ public class TranslationApiClient {
                     .addTextBody("translation_model", translationModel != null ? translationModel : "m2m100")
                     .addTextBody("subtitle_burn_type", subtitleBurnType)
                     .addTextBody("align", "True");
+
+            if (chatId != null) {
+                builder.addTextBody("chat_id", String.valueOf(chatId));
+            }
 
             if (useSubtitlesOnly != null && useSubtitlesOnly) {
                 builder.addTextBody("use_subtitles_only", "true");

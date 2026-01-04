@@ -45,16 +45,18 @@ public class TranslationController {
             @RequestParam(value = "original_lang", required = false) String originalLang,
             @RequestParam(value = "audio_track", required = false) Integer audioTrack,
             @RequestParam(value = "subtitle_track", required = false) Integer subtitleTrack,
-            @RequestParam(value = "align_output", defaultValue = "true") Boolean alignOutput
+            @RequestParam(value = "align_output", defaultValue = "true") Boolean alignOutput,
+            @RequestParam(value = "chat_id", required = false) Long chatId
     ) {
         try {
-            log.info("Received upload request: file={}, langs={}, model={}", file.getOriginalFilename(), langs, model);
+            log.info("Received upload request: file={}, langs={}, model={}, chatId={}", file.getOriginalFilename(), langs, model, chatId);
 
             // Store uploaded file
             File uploadedFile = fileStorageService.storeUploadedFile(file);
 
             // Create job
             TranslationJob job = jobTrackingService.createJob(file.getOriginalFilename(), uploadedFile.getAbsolutePath());
+            job.setChatId(chatId);
 
             // Prepare request
             TranslationJobRequest request = new TranslationJobRequest();

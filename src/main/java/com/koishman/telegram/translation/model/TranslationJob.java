@@ -18,6 +18,7 @@ public class TranslationJob {
     private LocalDateTime completedAt;
     private String errorMessage;
     private TranslationJobRequest request;
+    private Long chatId;
 
     public enum JobStatus {
         PENDING,

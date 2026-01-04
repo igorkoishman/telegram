@@ -221,4 +221,57 @@ public class TelegramApiClient {
             log.error("Failed to send document to chatId {}", chatId, e);
         }
     }
+
+    public Integer sendProgressMessage(Long chatId, String text) {
+        String url = config.getApiBase() + "/bot" + config.getBotToken() + "/sendMessage";
+
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("chat_id", chatId);
+        requestBody.put("text", text);
+        requestBody.put("parse_mode", "HTML");
+
+        try {
+            String json = objectMapper.writeValueAsString(requestBody);
+
+            HttpPost httpPost = new HttpPost(url);
+            httpPost.setHeader("Content-Type", "application/json");
+            httpPost.setEntity(new StringEntity(json));
+
+            return httpClient.execute(httpPost, response -> {
+                String responseBody = org.apache.hc.core5.http.io.entity.EntityUtils.toString(response.getEntity());
+                com.fasterxml.jackson.databind.JsonNode jsonNode = objectMapper.readTree(responseBody);
+                Integer messageId = jsonNode.get("result").get("message_id").asInt();
+                log.info("Progress message sent to chatId {} (messageId: {})", chatId, messageId);
+                return messageId;
+            });
+        } catch (Exception e) {
+            log.error("Failed to send progress message to chatId {}", chatId, e);
+            return null;
+        }
+    }
+
+    public void updateProgressMessage(Long chatId, Integer messageId, String text) {
+        String url = config.getApiBase() + "/bot" + config.getBotToken() + "/editMessageText";
+
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("chat_id", chatId);
+        requestBody.put("message_id", messageId);
+        requestBody.put("text", text);
+        requestBody.put("parse_mode", "HTML");
+
+        try {
+            String json = objectMapper.writeValueAsString(requestBody);
+
+            HttpPost httpPost = new HttpPost(url);
+            httpPost.setHeader("Content-Type", "application/json");
+            httpPost.setEntity(new StringEntity(json));
+
+            httpClient.execute(httpPost, response -> {
+                log.debug("Progress message updated for chatId {} (messageId: {})", chatId, messageId);
+                return null;
+            });
+        } catch (Exception e) {
+            log.error("Failed to update progress message for chatId {}", chatId, e);
+        }
+    }
 }

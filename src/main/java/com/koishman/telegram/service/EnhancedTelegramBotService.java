@@ -588,7 +588,8 @@ public class EnhancedTelegramBotService {
                     session.isUseExistingSubtitles(),
                     session.getOriginalLanguage(),
                     session.getAudioTrackIndex(),
-                    session.getSubtitleTrackIndex()
+                    session.getSubtitleTrackIndex(),
+                    chatId
             );
 
             session.setJobId(jobResponse.getJobId());
