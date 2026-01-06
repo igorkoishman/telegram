@@ -26,6 +26,9 @@ def translate_text(text, src_lang, tgt_lang, model_cache_dir="./models"):
     """
     try:
         from transformers import pipeline
+        import warnings
+        # Suppress the cache_dir warning
+        warnings.filterwarnings("ignore", message=".*model_kwargs.*")
     except ImportError:
         print("Error: transformers library not found", file=sys.stderr)
         print("Install with: pip install transformers", file=sys.stderr)
@@ -46,18 +49,33 @@ def translate_text(text, src_lang, tgt_lang, model_cache_dir="./models"):
     print(f"Loading NLLB model for {src_code} -> {tgt_code}...", file=sys.stderr)
 
     # Create translation pipeline
-    translator = pipeline(
-        "translation",
-        model="facebook/nllb-200-distilled-600M",
-        src_lang=src_code,
-        tgt_lang=tgt_code,
+    # Note: cache_dir causes issues with some transformers versions, so we use model_kwargs instead
+    from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
+
+    model = AutoModelForSeq2SeqLM.from_pretrained(
+        "facebook/nllb-200-distilled-600M",
+        cache_dir=model_cache_dir
+    )
+    tokenizer = AutoTokenizer.from_pretrained(
+        "facebook/nllb-200-distilled-600M",
         cache_dir=model_cache_dir
     )
 
-    print(f"Translating text...", file=sys.stderr)
-    result = translator(text, max_length=512)
+    translator = pipeline(
+        "translation",
+        model=model,
+        tokenizer=tokenizer,
+        src_lang=src_code,
+        tgt_lang=tgt_code
+    )
 
-    return result[0]["translation_text"]
+    print(f"Translating text...", file=sys.stderr)
+    try:
+        result = translator(text, max_length=512)
+        return result[0]["translation_text"]
+    except Exception as e:
+        print(f"Translation error: {e}", file=sys.stderr)
+        raise
 
 
 def main():

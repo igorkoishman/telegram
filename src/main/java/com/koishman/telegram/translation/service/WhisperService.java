@@ -63,33 +63,49 @@ public class WhisperService {
             pb.redirectErrorStream(true);
 
             Process process = pb.start();
-            StringBuilder jsonOutput = new StringBuilder();
-            String lastJsonLine = null;
+            List<String> allOutput = new ArrayList<>();
+            int jsonStartIndex = -1;
 
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    // Log all output for debugging
+                    allOutput.add(line);
                     log.debug("Whisper output: {}", line);
 
-                    // Capture only JSON lines (starting with '{' or '[')
-                    if (line.trim().startsWith("{") || line.trim().startsWith("[")) {
-                        lastJsonLine = line;
+                    // Mark the start of JSON output (look for any line starting with {)
+                    if (jsonStartIndex == -1 && line.trim().startsWith("{")) {
+                        jsonStartIndex = allOutput.size() - 1;
                     }
                 }
             }
 
             int exitCode = process.waitFor();
             if (exitCode != 0) {
-                throw new RuntimeException("Whisper transcription failed with exit code: " + exitCode);
+                throw new RuntimeException("Whisper transcription failed with exit code: " + exitCode +
+                    "\nOutput: " + String.join("\n", allOutput));
             }
 
-            if (lastJsonLine == null) {
-                throw new RuntimeException("No JSON output received from Whisper");
+            // Extract JSON from the output (everything from the opening { to the end)
+            if (jsonStartIndex == -1) {
+                throw new RuntimeException("No JSON output found in Whisper output. Full output:\n" +
+                    String.join("\n", allOutput));
             }
 
-            // Parse JSON output (use the last JSON line which should be the result)
-            JsonNode result = objectMapper.readTree(lastJsonLine);
+            // Collect all lines from the JSON start to the end
+            StringBuilder jsonBuilder = new StringBuilder();
+            for (int i = jsonStartIndex; i < allOutput.size(); i++) {
+                jsonBuilder.append(allOutput.get(i)).append("\n");
+            }
+            String jsonResult = jsonBuilder.toString().trim();
+
+            // Parse JSON output
+            JsonNode result;
+            try {
+                result = objectMapper.readTree(jsonResult);
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to parse JSON output. JSON:\n" + jsonResult +
+                    "\nFull output:\n" + String.join("\n", allOutput), e);
+            }
 
             if (result.has("error")) {
                 throw new RuntimeException("Whisper error: " + result.get("error").asText());

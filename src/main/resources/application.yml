@@ -9,7 +9,7 @@ spring:
 
 telegram:
   api-base: https://api.telegram.org
-  bot-token: ${TELEGRAM_BOT_TOKEN:8386103559:AAFbTGtlff8xLdjY6PqtYM1oG0_8AIo6IB4}
+  bot-token: ${TELEGRAM_BOT_TOKEN:8170886776:AAFIPACI3c8zyQ442fMkuFBXSisIAXoI1xU}
   mode: ${TELEGRAM_MODE:polling}
   webhook-secret: ${TELEGRAM_WEBHOOK_SECRET:tg-secret-9f3c1d-2025}
   translation-api-base: http://localhost:8080
