@@ -69,22 +69,59 @@ public class TranslationService {
             pb.redirectErrorStream(true);
 
             Process process = pb.start();
-            StringBuilder output = new StringBuilder();
+            List<String> allOutput = new ArrayList<>();
 
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    output.append(line);
+                    allOutput.add(line);
+                    log.debug("Translation output: {}", line);
                 }
             }
 
             int exitCode = process.waitFor();
             if (exitCode != 0) {
-                throw new RuntimeException("Translation failed with exit code: " + exitCode);
+                throw new RuntimeException("Translation failed with exit code: " + exitCode +
+                    "\nOutput: " + String.join("\n", allOutput));
+            }
+
+            // Find JSON output - look for a line that starts with { (could be single-line or multi-line)
+            String jsonResult = null;
+            int jsonStartIndex = -1;
+
+            for (int i = allOutput.size() - 1; i >= 0; i--) {
+                String line = allOutput.get(i).trim();
+                if (line.startsWith("{")) {
+                    // Check if it's single-line JSON (starts and ends with {})
+                    if (line.endsWith("}")) {
+                        jsonResult = line;
+                        break;
+                    } else {
+                        // Multi-line JSON - collect from this line to the end
+                        jsonStartIndex = i;
+                        StringBuilder jsonBuilder = new StringBuilder();
+                        for (int j = jsonStartIndex; j < allOutput.size(); j++) {
+                            jsonBuilder.append(allOutput.get(j)).append("\n");
+                        }
+                        jsonResult = jsonBuilder.toString().trim();
+                        break;
+                    }
+                }
+            }
+
+            if (jsonResult == null) {
+                throw new RuntimeException("No JSON output found in translation output. Full output:\n" +
+                    String.join("\n", allOutput));
             }
 
             // Parse JSON output
-            JsonNode result = objectMapper.readTree(output.toString());
+            JsonNode result;
+            try {
+                result = objectMapper.readTree(jsonResult);
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to parse JSON output. JSON:\n" + jsonResult +
+                    "\nFull output:\n" + String.join("\n", allOutput), e);
+            }
 
             if (result.has("error")) {
                 throw new RuntimeException("Translation error: " + result.get("error").asText());

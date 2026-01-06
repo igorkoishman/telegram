@@ -103,6 +103,19 @@ public class TelegramLongPollingService {
                 log.info("Polling interrupted");
                 Thread.currentThread().interrupt();
                 break;
+            } catch (org.springframework.web.client.ResourceAccessException e) {
+                // Expected timeout from long polling - this is normal behavior
+                if (e.getCause() instanceof java.net.SocketTimeoutException) {
+                    log.debug("Long polling timeout (expected) - continuing...");
+                } else {
+                    log.error("Network error during polling: {}", e.getMessage());
+                    try {
+                        Thread.sleep(5000); // Wait before retrying
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
+                }
             } catch (Exception e) {
                 log.error("Error during polling: {}", e.getMessage(), e);
                 try {
