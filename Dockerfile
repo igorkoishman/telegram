@@ -4,15 +4,29 @@
 # Stage 1: Build Java application
 FROM maven:3.9-eclipse-temurin-11-alpine AS java-builder
 
+# Install CA certificates for HTTPS
+RUN apk add --no-cache ca-certificates && update-ca-certificates
+
 WORKDIR /build
 
-# Copy pom.xml and download dependencies (cached layer)
+# Copy Maven settings with repository configurations
+COPY .mvn/settings.xml /root/.m2/settings.xml
+
+# Copy pom.xml and download dependencies (cached layer with retry)
 COPY pom.xml .
-RUN mvn dependency:go-offline -B
+RUN set -e; \
+    max_attempts=3; \
+    attempt=0; \
+    until [ $attempt -ge $max_attempts ]; do \
+        mvn dependency:go-offline -B -s /root/.m2/settings.xml && break; \
+        attempt=$((attempt+1)); \
+        echo "Attempt $attempt failed. Retrying in 10 seconds..."; \
+        sleep 10; \
+    done
 
 # Copy source code and build
 COPY src ./src
-RUN mvn clean package -DskipTests
+RUN mvn clean package -DskipTests -s /root/.m2/settings.xml
 
 # Stage 2: Runtime image with Python and Java
 # Use NVIDIA CUDA base image for GPU support (falls back to CPU if no GPU)
