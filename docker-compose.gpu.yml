@@ -1,0 +1,102 @@
+version: '3.8'
+
+# OPTIMIZED GPU VERSION for NVIDIA (Windows/Linux)
+# Maximum performance with CUDA acceleration
+services:
+  telegram-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ${DOCKER_USERNAME:-igorkoishman}/telegram-translator:gpu
+    container_name: telegram-translator-gpu
+    restart: unless-stopped
+
+    # NVIDIA GPU support with maximum allocation
+    deploy:
+      resources:
+        limits:
+          cpus: '15'
+          memory: 16G
+        reservations:
+          cpus: '8'
+          memory: 8G
+          devices:
+            - driver: nvidia
+              count: all  # Use ALL available GPUs
+              capabilities: [gpu, compute, utility]
+
+    ports:
+      - "8080:8080"
+
+    environment:
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_MODE=polling
+      - TELEGRAM_WEBHOOK_SECRET=${TELEGRAM_WEBHOOK_SECRET:-tg-secret-9f3c1d-2025}
+      # Optimized JVM for GPU workloads
+      - JAVA_OPTS=${JAVA_OPTS:--Xmx12g -Xms4g -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:ParallelGCThreads=8 -XX:ConcGCThreads=2 -XX:+UseStringDeduplication -XX:+AlwaysPreTouch}
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-production}
+
+      # Model configuration - use larger models with GPU
+      - TRANSLATION_MODELS_AUTO_DOWNLOAD=${TRANSLATION_MODELS_AUTO_DOWNLOAD:-true}
+      - TRANSLATION_MODELS_WHISPER_MODELS=${TRANSLATION_MODELS_WHISPER_MODELS:-small,medium}
+      - TRANSLATION_MODELS_WHISPER_BACKENDS=${TRANSLATION_MODELS_WHISPER_BACKENDS:-faster-whisper}
+      - TRANSLATION_MODELS_TRANSLATION_MODELS=${TRANSLATION_MODELS_TRANSLATION_MODELS:-m2m100,nllb}
+
+      # CUDA/GPU optimization
+      - CUDA_VISIBLE_DEVICES=all
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+      - OMP_NUM_THREADS=8
+      - MKL_NUM_THREADS=8
+
+      # PyTorch CUDA optimization
+      - PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:512
+      - CUDA_LAUNCH_BLOCKING=0
+
+    volumes:
+      # Persistent cache for AI models (Hugging Face and OpenAI Whisper)
+      - whisper-cache:/root/.cache/whisper
+      - huggingface-cache:/root/.cache/huggingface
+      # Persistent storage for uploads and outputs
+      - telegram-uploads:/app/uploads
+      - telegram-outputs:/app/outputs
+      - telegram-downloads:/app/downloads
+      # Optional: Override config
+      - ./config/application-production.yml:/app/config/application.yml:ro
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s  # GPU initialization takes longer
+
+    networks:
+      - telegram-network
+
+    # Use tmpfs for temporary processing (faster I/O)
+    tmpfs:
+      - /tmp:size=4G,mode=1777
+
+    # Security options for maximum performance
+    security_opt:
+      - seccomp:unconfined
+
+    # Shared memory size for large models
+    shm_size: '4gb'
+
+volumes:
+  whisper-cache:
+    driver: local
+  huggingface-cache:
+    driver: local
+  telegram-uploads:
+    driver: local
+  telegram-outputs:
+    driver: local
+  telegram-downloads:
+    driver: local
+
+networks:
+  telegram-network:
+    driver: bridge

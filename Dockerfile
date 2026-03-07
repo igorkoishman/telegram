@@ -9,6 +9,7 @@ RUN apk add --no-cache ca-certificates && update-ca-certificates
 
 WORKDIR /build
 
+
 # Copy Maven settings with repository configurations
 COPY .mvn/settings.xml /root/.m2/settings.xml
 
