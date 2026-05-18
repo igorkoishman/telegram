@@ -6,7 +6,16 @@ Called from Java to translate text using M2M100 or NLLB
 import sys
 import json
 import argparse
+import torch
 from transformers import M2M100ForConditionalGeneration, M2M100Tokenizer
+
+def get_device():
+    """Detect best available device: cuda -> cpu"""
+    if torch.cuda.is_available():
+        return "cuda"
+    # Note: Translation models are freezing on MPS due to embedding ops.
+    # We must fallback to CPU to prevent translation hanging at 53%.
+    return "cpu"
 
 # Language code mapping
 LANG_CODES = {
@@ -34,15 +43,18 @@ def translate(text, source_lang, target_lang, model_name="facebook/m2m100_418M")
         Translated text
     """
     try:
+        device = get_device()
+        print(f"Using device: {device}", file=sys.stderr)
+
         # Load model and tokenizer
-        model = M2M100ForConditionalGeneration.from_pretrained(model_name)
+        model = M2M100ForConditionalGeneration.from_pretrained(model_name).to(device)
         tokenizer = M2M100Tokenizer.from_pretrained(model_name)
 
         # Set source language
         tokenizer.src_lang = source_lang
 
         # Tokenize
-        encoded = tokenizer(text, return_tensors="pt", max_length=512, truncation=True)
+        encoded = tokenizer(text, return_tensors="pt", max_length=512, truncation=True).to(device)
 
         # Generate translation
         generated_tokens = model.generate(

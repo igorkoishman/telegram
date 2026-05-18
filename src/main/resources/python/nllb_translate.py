@@ -6,6 +6,15 @@ Uses facebook/nllb-200-distilled-600M model
 import argparse
 import json
 import sys
+import torch
+
+def get_device():
+    """Detect best available device: cuda -> cpu"""
+    if torch.cuda.is_available():
+        return "cuda"
+    # Note: Translation models are freezing on MPS due to embedding ops.
+    # We must fallback to CPU to prevent translation hanging at 53%.
+    return "cpu"
 
 # NLLB language code mapping
 LANG_CODE_MAP = {
@@ -46,27 +55,32 @@ def translate_text(text, src_lang, tgt_lang, model_cache_dir="./models"):
     src_code = LANG_CODE_MAP[src_key]
     tgt_code = LANG_CODE_MAP[tgt_key]
 
-    print(f"Loading NLLB model for {src_code} -> {tgt_code}...", file=sys.stderr)
+    device = get_device()
+    print(f"Loading NLLB model for {src_code} -> {tgt_code} using {device}...", file=sys.stderr)
 
     # Create translation pipeline
-    # Note: cache_dir causes issues with some transformers versions, so we use model_kwargs instead
     from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
     model = AutoModelForSeq2SeqLM.from_pretrained(
         "facebook/nllb-200-distilled-600M",
         cache_dir=model_cache_dir
-    )
+    ).to(device)
+    
     tokenizer = AutoTokenizer.from_pretrained(
         "facebook/nllb-200-distilled-600M",
         cache_dir=model_cache_dir
     )
+
+    # Use device index for cuda, 'mps' for Mac, or -1 for cpu
+    device_arg = 0 if device == "cuda" else (-1 if device == "cpu" else "mps")
 
     translator = pipeline(
         "translation",
         model=model,
         tokenizer=tokenizer,
         src_lang=src_code,
-        tgt_lang=tgt_code
+        tgt_lang=tgt_code,
+        device=device_arg
     )
 
     print(f"Translating text...", file=sys.stderr)

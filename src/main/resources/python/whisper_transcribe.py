@@ -7,6 +7,15 @@ import sys
 import json
 import argparse
 from faster_whisper import WhisperModel
+import torch
+
+def get_device():
+    """Detect best available device: cuda -> mps -> cpu"""
+    if torch.cuda.is_available():
+        return "cuda"
+    # Note: faster-whisper doesn't support MPS yet (only CUDA/CPU), 
+    # but we'll prepare the logic for other scripts.
+    return "cpu"
 
 def transcribe(audio_file, model_size="large", language=None, align=False):
     """
@@ -23,7 +32,9 @@ def transcribe(audio_file, model_size="large", language=None, align=False):
     """
     try:
         # Load model
-        model = WhisperModel(model_size, device="cpu", compute_type="int8")
+        device = get_device()
+        print(f"Using device: {device}", file=sys.stderr)
+        model = WhisperModel(model_size, device=device, compute_type="int8")
 
         # Transcribe
         segments, info = model.transcribe(

@@ -7,6 +7,16 @@ import json
 import sys
 import os
 
+import torch
+
+def get_device():
+    """Detect best available device: cuda -> cpu"""
+    if torch.cuda.is_available():
+        return "cuda"
+    # Note: OpenAI Whisper currently fails on MPS (Apple Silicon GPU) due to 
+    # missing sparse tensor operations. We must fallback to CPU to prevent crashes.
+    return "cpu"
+
 def transcribe(audio_path, model_size="large", language=None, align_output=True):
     """
     Transcribe audio using OpenAI Whisper with optional alignment
@@ -14,14 +24,13 @@ def transcribe(audio_path, model_size="large", language=None, align_output=True)
     try:
         import whisper
         import whisperx
-        import torch
     except ImportError as e:
         print(f"Error: Required library not found: {e}", file=sys.stderr)
         print("Install with: pip install openai-whisper whisperx", file=sys.stderr)
         sys.exit(1)
 
     # Determine device
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = get_device()
     print(f"Using device: {device}", file=sys.stderr)
 
     # Load OpenAI Whisper model

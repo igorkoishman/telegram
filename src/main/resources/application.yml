@@ -20,7 +20,7 @@ translation:
     upload-dir: ./uploads
     output-dir: ./outputs
   python:
-    executable: /Users/ikoishman/IdeaProjects/telegram/venv/bin/python3
+    executable: ${PYTHON_EXECUTABLE:./venv/bin/python3}
     scripts-dir: src/main/resources/python
   models:
     auto-download: true
