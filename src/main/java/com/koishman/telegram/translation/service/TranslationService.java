@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -71,7 +72,7 @@ public class TranslationService {
             Process process = pb.start();
             List<String> allOutput = new ArrayList<>();
 
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     allOutput.add(line);

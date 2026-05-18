@@ -7,6 +7,11 @@ import sys
 import json
 import argparse
 import torch
+
+# Force UTF-8 encoding for stdout
+if sys.stdout.encoding != 'utf-8':
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 from transformers import M2M100ForConditionalGeneration, M2M100Tokenizer
 
 def get_device():

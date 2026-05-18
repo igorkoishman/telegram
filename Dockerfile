@@ -72,7 +72,10 @@ RUN mkdir -p /app/uploads /app/outputs /app/downloads /app/models
 ENV JAVA_OPTS="-Xmx2g -Xms512m" \
     SPRING_CONFIG_LOCATION=/app/config/application.yml \
     TRANSLATION_PYTHON_EXECUTABLE=/usr/bin/python3 \
-    TRANSLATION_PYTHON_SCRIPTS_DIR=/app/python
+    TRANSLATION_PYTHON_SCRIPTS_DIR=/app/python \
+    LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8 \
+    PYTHONIOENCODING=utf-8
 
 # Expose port
 EXPOSE 8080

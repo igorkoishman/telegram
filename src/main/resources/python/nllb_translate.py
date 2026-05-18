@@ -8,6 +8,11 @@ import json
 import sys
 import torch
 
+# Force UTF-8 encoding for stdout
+if sys.stdout.encoding != 'utf-8':
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+
 def get_device():
     """Detect best available device: cuda -> cpu"""
     if torch.cuda.is_available():
