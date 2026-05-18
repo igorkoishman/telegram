@@ -42,7 +42,15 @@ RUN apt-get update && apt-get install -y \
     curl \
     build-essential \
     git \
+    locales \
+    fonts-noto-core \
+    fonts-noto-extra \
+    && locale-gen en_US.UTF-8 \
     && rm -rf /var/lib/apt/lists/*
+
+# Set environment variables for UTF-8 support
+ENV LANG=en_US.UTF-8
+ENV LC_ALL=en_US.UTF-8
 
 # Set Python 3.11 as default
 RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
