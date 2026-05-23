@@ -65,12 +65,20 @@ def translate(text, source_lang, target_lang, model_name="facebook/m2m100_418M")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("text", help="Text to translate")
+    parser.add_argument("text", nargs="?", help="Text to translate (or '-' to read from stdin)")
     parser.add_argument("--source", required=True, help="Source language code")
     parser.add_argument("--target", required=True, help="Target language code")
     parser.add_argument("--model", default="facebook/m2m100_418M", help="Model name")
 
     args = parser.parse_args()
 
-    result = translate(args.text, args.source, args.target, args.model)
+    text = args.text
+    if not text or text == "-":
+        text = sys.stdin.read().strip()
+
+    if not text:
+        print(json.dumps({"error": "No text provided for translation"}))
+        sys.exit(1)
+
+    result = translate(text, args.source, args.target, args.model)
     print(json.dumps(result, ensure_ascii=False))
