@@ -26,8 +26,8 @@ spec:
     spec:
       containers:
       - name: telegram-bot
-        image: igorkoishman/telegram-translator:latest-cpu
-        imagePullPolicy: Always
+        image: igorkoishman/telegram-translator:local-encoding-fix
+        imagePullPolicy: Never
         env:
         - name: TELEGRAM_BOT_TOKEN
           value: "8170886776:AAFIPACI3c8zyQ442fMkuFBXSisIAXoI1xU"
@@ -47,6 +47,10 @@ spec:
           value: "faster-whisper,openai-whisper"
         - name: TRANSLATION_MODELS_TRANSLATION_MODELS
           value: "m2m100,nllb"
+        - name: LANG
+          value: "en_US.UTF-8"
+        - name: LC_ALL
+          value: "en_US.UTF-8"
         volumeMounts:
         - name: telegram-data
           mountPath: /app/models
