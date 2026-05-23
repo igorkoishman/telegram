@@ -99,16 +99,24 @@ def translate_text(text, src_lang, tgt_lang, model_cache_dir="./models"):
 
 def main():
     parser = argparse.ArgumentParser(description="Translate text using NLLB")
-    parser.add_argument("--text", required=True, help="Text to translate")
+    parser.add_argument("--text", help="Text to translate (or '-' to read from stdin)")
     parser.add_argument("--src-lang", required=True, help="Source language code")
     parser.add_argument("--tgt-lang", required=True, help="Target language code")
     parser.add_argument("--model-cache-dir", default="./models", help="Model cache directory")
 
     args = parser.parse_args()
 
+    text = args.text
+    if not text or text == "-":
+        text = sys.stdin.read().strip()
+
+    if not text:
+        print(json.dumps({"error": "No text provided for translation"}))
+        sys.exit(1)
+
     try:
         translated = translate_text(
-            args.text,
+            text,
             args.src_lang,
             args.tgt_lang,
             args.model_cache_dir
@@ -116,7 +124,7 @@ def main():
 
         # Output JSON result
         result = {
-            "original": args.text,
+            "original": text,
             "translated": translated,
             "src_lang": args.src_lang,
             "tgt_lang": args.tgt_lang

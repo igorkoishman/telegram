@@ -10,6 +10,9 @@ import org.springframework.stereotype.Service;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.BufferedWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -51,13 +54,13 @@ public class TranslationService {
             // NLLB script uses different argument format
             if (model.equalsIgnoreCase("nllb")) {
                 command.add("--text");
-                command.add(text);
+                command.add("-"); // Read from stdin
                 command.add("--src-lang");
                 command.add(sourceLang);
                 command.add("--tgt-lang");
                 command.add(targetLang);
             } else {
-                command.add(text);
+                command.add("-"); // Read from stdin
                 command.add("--source");
                 command.add(sourceLang);
                 command.add("--target");
@@ -70,6 +73,14 @@ public class TranslationService {
             pb.redirectErrorStream(true);
 
             Process process = pb.start();
+
+            // Write text to stdin as UTF-8
+            try (java.io.OutputStream os = process.getOutputStream();
+                 java.io.BufferedWriter writer = new java.io.BufferedWriter(new java.io.OutputStreamWriter(os, StandardCharsets.UTF_8))) {
+                writer.write(text);
+                writer.flush();
+            }
+
             List<String> allOutput = new ArrayList<>();
 
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
