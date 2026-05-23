@@ -204,7 +204,7 @@ public class TelegramApiClient {
 
         try {
             var entity = org.apache.hc.client5.http.entity.mime.MultipartEntityBuilder.create()
-                    .addBinaryBody("document", documentFile, org.apache.hc.core5.http.ContentType.APPLICATION_OCTET_STREAM, documentFile.getName())
+                    .addBinaryBody("document", documentFile, documentFile.getName().endsWith(".srt") ? org.apache.hc.core5.http.ContentType.create("text/plain", java.nio.charset.StandardCharsets.UTF_8) : org.apache.hc.core5.http.ContentType.APPLICATION_OCTET_STREAM, documentFile.getName())
                     .addTextBody("chat_id", String.valueOf(chatId));
 
             if (caption != null) {

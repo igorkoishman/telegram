@@ -4,6 +4,14 @@ Translation script
 Called from Java to translate text using M2M100 or NLLB
 """
 import sys
+import io
+if sys.stdout.encoding != "utf-8": sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
+if sys.stdin.encoding != "utf-8": sys.stdin = io.TextIOWrapper(sys.stdin.buffer, encoding="utf-8")
+if not hasattr(sys, "get_int_max_str_digits"):
+    def g(): return 4300
+    def s(maxdigits): pass
+    sys.get_int_max_str_digits = g
+    sys.set_int_max_str_digits = s
 import json
 import argparse
 import torch

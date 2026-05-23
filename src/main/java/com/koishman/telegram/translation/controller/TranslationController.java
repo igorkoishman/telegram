@@ -104,7 +104,7 @@ public class TranslationController {
             }
 
             Map<String, Object> response = new HashMap<>();
-            response.put("status", job.getStatus() == TranslationJob.JobStatus.COMPLETED ? "done" : "processing");
+            String statusString = "processing"; if (job.getStatus() == TranslationJob.JobStatus.COMPLETED) { statusString = "done"; } else if (job.getStatus() == TranslationJob.JobStatus.FAILED) { statusString = "failed"; } response.put("status", statusString);
             response.put("outputs", job.getOutputs());
             response.put("duration_seconds", String.valueOf(job.getDurationSeconds()));
 
@@ -148,7 +148,7 @@ public class TranslationController {
 
             String contentType = determineContentType(filename);
 
-            return ResponseEntity.ok()
+            return ResponseEntity.ok().header(HttpHeaders.CONTENT_TYPE, contentType + "; charset=utf-8")
                     .contentType(MediaType.parseMediaType(contentType))
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
                     .body(resource);

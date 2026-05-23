@@ -6,6 +6,14 @@ Uses facebook/nllb-200-distilled-600M model
 import argparse
 import json
 import sys
+import io
+if sys.stdout.encoding != "utf-8": sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
+if sys.stdin.encoding != "utf-8": sys.stdin = io.TextIOWrapper(sys.stdin.buffer, encoding="utf-8")
+if not hasattr(sys, "get_int_max_str_digits"):
+    def g(): return 4300
+    def s(maxdigits): pass
+    sys.get_int_max_str_digits = g
+    sys.set_int_max_str_digits = s
 import torch
 
 # Force UTF-8 encoding for stdout
@@ -39,10 +47,7 @@ def translate_text(text, src_lang, tgt_lang, model_cache_dir="./models"):
     Translate text using NLLB model
     """
     try:
-        from transformers import pipeline
-        import warnings
-        # Suppress the cache_dir warning
-        warnings.filterwarnings("ignore", message=".*model_kwargs.*")
+        from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
     except ImportError:
         print("Error: transformers library not found", file=sys.stderr)
         print("Install with: pip install transformers", file=sys.stderr)
@@ -63,9 +68,7 @@ def translate_text(text, src_lang, tgt_lang, model_cache_dir="./models"):
     device = get_device()
     print(f"Loading NLLB model for {src_code} -> {tgt_code} using {device}...", file=sys.stderr)
 
-    # Create translation pipeline
-    from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
-
+    # Load model and tokenizer
     model = AutoModelForSeq2SeqLM.from_pretrained(
         "facebook/nllb-200-distilled-600M",
         cache_dir=model_cache_dir
@@ -76,22 +79,21 @@ def translate_text(text, src_lang, tgt_lang, model_cache_dir="./models"):
         cache_dir=model_cache_dir
     )
 
-    # Use device index for cuda, 'mps' for Mac, or -1 for cpu
-    device_arg = 0 if device == "cuda" else (-1 if device == "cpu" else "mps")
-
-    translator = pipeline(
-        "translation",
-        model=model,
-        tokenizer=tokenizer,
-        src_lang=src_code,
-        tgt_lang=tgt_code,
-        device=device_arg
-    )
-
     print(f"Translating text...", file=sys.stderr)
     try:
-        result = translator(text, max_length=512)
-        return result[0]["translation_text"]
+        # Set source language and tokenize
+        tokenizer.src_lang = src_code
+        inputs = tokenizer(text, return_tensors="pt").to(device)
+
+        # Generate translation with target language
+        translated_tokens = model.generate(
+            **inputs,
+            forced_bos_token_id=tokenizer.convert_tokens_to_ids(tgt_code),
+            max_length=512
+        )
+
+        # Decode
+        return tokenizer.batch_decode(translated_tokens, skip_special_tokens=True)[0]
     except Exception as e:
         print(f"Translation error: {e}", file=sys.stderr)
         raise

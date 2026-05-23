@@ -125,7 +125,7 @@ public class FFmpegService {
             command.add(videoFile.getAbsolutePath());
             command.add("-y");
             command.add("-vf");
-            command.add("subtitles=" + subtitleFile.getAbsolutePath().replace("\\", "/").replace(":", "\\:"));
+            command.add("subtitles=" + subtitleFile.getAbsolutePath().replace("\\", "/").replace(":", "\\:") + ":force_style='Fontname=DejaVu Sans,FontSize=18'");
             command.add("-c:a");
             command.add("copy");
             command.add(outputFile.getAbsolutePath());

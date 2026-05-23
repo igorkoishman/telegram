@@ -197,6 +197,7 @@ public class SubtitleProcessingService {
 
     private void writeSRT(List<SubtitleSegment> segments, File outputFile) throws IOException {
         try (OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(outputFile), StandardCharsets.UTF_8)) {
+        writer.write("\ufeff");
             for (SubtitleSegment segment : segments) {
                 writer.write(segment.toSRT());
                 writer.write("\n");
