@@ -4,9 +4,31 @@ Whisper transcription script
 Called from Java to transcribe audio files
 """
 import sys
+import io
+if sys.stdout.encoding != "utf-8": sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
+if sys.stdin.encoding != "utf-8": sys.stdin = io.TextIOWrapper(sys.stdin.buffer, encoding="utf-8")
+if not hasattr(sys, "get_int_max_str_digits"):
+    def g(): return 4300
+    def s(maxdigits): pass
+    sys.get_int_max_str_digits = g
+    sys.set_int_max_str_digits = s
 import json
 import argparse
 from faster_whisper import WhisperModel
+import torch
+
+# Force UTF-8 encoding for stdout
+if sys.stdout.encoding != 'utf-8':
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+
+def get_device():
+    """Detect best available device: cuda -> mps -> cpu"""
+    if torch.cuda.is_available():
+        return "cuda"
+    # Note: faster-whisper doesn't support MPS yet (only CUDA/CPU), 
+    # but we'll prepare the logic for other scripts.
+    return "cpu"
 
 def transcribe(audio_file, model_size="large", language=None, align=False):
     """
@@ -23,7 +45,9 @@ def transcribe(audio_file, model_size="large", language=None, align=False):
     """
     try:
         # Load model
-        model = WhisperModel(model_size, device="cpu", compute_type="int8")
+        device = get_device()
+        print(f"Using device: {device}", file=sys.stderr)
+        model = WhisperModel(model_size, device=device, compute_type="int8")
 
         # Transcribe
         segments, info = model.transcribe(

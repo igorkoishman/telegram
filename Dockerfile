@@ -9,6 +9,7 @@ RUN apk add --no-cache ca-certificates && update-ca-certificates
 
 WORKDIR /build
 
+
 # Copy Maven settings with repository configurations
 COPY .mvn/settings.xml /root/.m2/settings.xml
 
@@ -43,6 +44,10 @@ RUN apt-get update && apt-get install -y \
     curl \
     build-essential \
     git \
+    locales \
+    fonts-noto-core \
+    fonts-noto-extra \
+    && locale-gen en_US.UTF-8 \
     && rm -rf /var/lib/apt/lists/*
 
 # Set Python 3.11 as default
@@ -71,7 +76,10 @@ RUN mkdir -p /app/uploads /app/outputs /app/downloads /app/models
 ENV JAVA_OPTS="-Xmx2g -Xms512m" \
     SPRING_CONFIG_LOCATION=/app/config/application.yml \
     TRANSLATION_PYTHON_EXECUTABLE=/usr/bin/python3 \
-    TRANSLATION_PYTHON_SCRIPTS_DIR=/app/python
+    TRANSLATION_PYTHON_SCRIPTS_DIR=/app/python \
+    LANG=en_US.UTF-8 \
+    LC_ALL=en_US.UTF-8 \
+    PYTHONIOENCODING=utf-8
 
 # Expose port
 EXPOSE 8080

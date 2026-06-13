@@ -4,9 +4,31 @@ Translation script
 Called from Java to translate text using M2M100 or NLLB
 """
 import sys
+import io
+if sys.stdout.encoding != "utf-8": sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
+if sys.stdin.encoding != "utf-8": sys.stdin = io.TextIOWrapper(sys.stdin.buffer, encoding="utf-8")
+if not hasattr(sys, "get_int_max_str_digits"):
+    def g(): return 4300
+    def s(maxdigits): pass
+    sys.get_int_max_str_digits = g
+    sys.set_int_max_str_digits = s
 import json
 import argparse
+import torch
+
+# Force UTF-8 encoding for stdout
+if sys.stdout.encoding != 'utf-8':
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 from transformers import M2M100ForConditionalGeneration, M2M100Tokenizer
+
+def get_device():
+    """Detect best available device: cuda -> cpu"""
+    if torch.cuda.is_available():
+        return "cuda"
+    # Note: Translation models are freezing on MPS due to embedding ops.
+    # We must fallback to CPU to prevent translation hanging at 53%.
+    return "cpu"
 
 # Language code mapping
 LANG_CODES = {
@@ -34,15 +56,18 @@ def translate(text, source_lang, target_lang, model_name="facebook/m2m100_418M")
         Translated text
     """
     try:
+        device = get_device()
+        print(f"Using device: {device}", file=sys.stderr)
+
         # Load model and tokenizer
-        model = M2M100ForConditionalGeneration.from_pretrained(model_name)
+        model = M2M100ForConditionalGeneration.from_pretrained(model_name).to(device)
         tokenizer = M2M100Tokenizer.from_pretrained(model_name)
 
         # Set source language
         tokenizer.src_lang = source_lang
 
         # Tokenize
-        encoded = tokenizer(text, return_tensors="pt", max_length=512, truncation=True)
+        encoded = tokenizer(text, return_tensors="pt", max_length=512, truncation=True).to(device)
 
         # Generate translation
         generated_tokens = model.generate(
@@ -65,12 +90,20 @@ def translate(text, source_lang, target_lang, model_name="facebook/m2m100_418M")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("text", help="Text to translate")
+    parser.add_argument("text", nargs="?", help="Text to translate (or '-' to read from stdin)")
     parser.add_argument("--source", required=True, help="Source language code")
     parser.add_argument("--target", required=True, help="Target language code")
     parser.add_argument("--model", default="facebook/m2m100_418M", help="Model name")
 
     args = parser.parse_args()
 
-    result = translate(args.text, args.source, args.target, args.model)
+    text = args.text
+    if not text or text == "-":
+        text = sys.stdin.read().strip()
+
+    if not text:
+        print(json.dumps({"error": "No text provided for translation"}))
+        sys.exit(1)
+
+    result = translate(text, args.source, args.target, args.model)
     print(json.dumps(result, ensure_ascii=False))

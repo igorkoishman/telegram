@@ -1,0 +1,10 @@
+Read CLAUDE.md.
+Scan the repo to confirm:
+- correct test/lint commands,
+- test framework (JUnit4/5, TestNG, pytest, jest),
+- code style tools (spotless, checkstyle, black, eslint, prettier),
+- CI commands (GitHub Actions, Jenkins, etc.)
+
+Use Glob to find config files, Grep to search for patterns, Read to examine files.
+Then suggest updates to CLAUDE.md (only edits, no guesses).
+Output specific Edit tool calls.

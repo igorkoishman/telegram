@@ -9,8 +9,10 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -194,7 +196,8 @@ public class SubtitleProcessingService {
     }
 
     private void writeSRT(List<SubtitleSegment> segments, File outputFile) throws IOException {
-        try (FileWriter writer = new FileWriter(outputFile)) {
+        try (OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(outputFile), StandardCharsets.UTF_8)) {
+        writer.write("\ufeff");
             for (SubtitleSegment segment : segments) {
                 writer.write(segment.toSRT());
                 writer.write("\n");

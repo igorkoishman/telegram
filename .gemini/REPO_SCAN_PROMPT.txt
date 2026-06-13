@@ -1,0 +1,7 @@
+Read GEMINI.md.
+Scan the repo to confirm:
+- correct test/lint commands,
+- test framework (JUnit4/5, pytest, jest),
+- code style tools (spotless, checkstyle, black, eslint),
+- CI commands (GitHub Actions, Jenkins, etc.)
+Then suggest updates to GEMINI.md (only edits, no guesses).

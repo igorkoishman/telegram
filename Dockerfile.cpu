@@ -42,7 +42,15 @@ RUN apt-get update && apt-get install -y \
     curl \
     build-essential \
     git \
+    locales \
+    fonts-noto-core \
+    fonts-noto-extra \
+    && locale-gen en_US.UTF-8 \
     && rm -rf /var/lib/apt/lists/*
+
+# Set environment variables for UTF-8 support
+ENV LANG=en_US.UTF-8
+ENV LC_ALL=en_US.UTF-8
 
 # Set Python 3.11 as default
 RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
@@ -70,7 +78,10 @@ RUN mkdir -p /app/uploads /app/outputs /app/downloads /app/models
 ENV JAVA_OPTS="-Xmx2g -Xms512m" \
     SPRING_CONFIG_LOCATION=/app/config/application.yml \
     TRANSLATION_PYTHON_EXECUTABLE=/usr/bin/python3 \
-    TRANSLATION_PYTHON_SCRIPTS_DIR=/app/python
+    TRANSLATION_PYTHON_SCRIPTS_DIR=/app/python \
+    LANG=en_US.UTF-8 \
+    LC_ALL=en_US.UTF-8 \
+    PYTHONIOENCODING=utf-8
 
 # Expose port
 EXPOSE 8080

@@ -147,3 +147,7 @@ models/
 # JetBrains profiler snapshots
 *.jfr
 /IdeaSnapshots/
+
+# Claude Code local settings (keep personal settings private)
+.claude/settings.local.json
+venv/

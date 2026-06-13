@@ -1,0 +1,82 @@
+version: '3.8'
+
+# Optimized for Mac (CPU-only, maximum performance)
+# Note: Docker on Mac cannot access GPU (neither NVIDIA nor Apple Silicon)
+services:
+  telegram-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile.cpu
+    image: ${DOCKER_USERNAME:-igorkoishman}/telegram-translator:mac
+    container_name: telegram-translator
+    restart: unless-stopped
+
+    # Maximum resource allocation for Mac
+    deploy:
+      resources:
+        limits:
+          cpus: '15'  # Leave 1 CPU for system
+          memory: 12G  # Increase Docker Desktop memory in settings
+        reservations:
+          cpus: '8'
+          memory: 4G
+
+    ports:
+      - "8080:8080"
+
+    environment:
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_MODE=polling
+      - TELEGRAM_WEBHOOK_SECRET=${TELEGRAM_WEBHOOK_SECRET:-tg-secret-9f3c1d-2025}
+      # Optimized JVM settings for Mac
+      - JAVA_OPTS=${JAVA_OPTS:--Xmx8g -Xms2g -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:ParallelGCThreads=8 -XX:ConcGCThreads=2 -XX:+UseStringDeduplication}
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-production}
+      # Model download configuration
+      - TRANSLATION_MODELS_AUTO_DOWNLOAD=${TRANSLATION_MODELS_AUTO_DOWNLOAD:-true}
+      - TRANSLATION_MODELS_WHISPER_MODELS=${TRANSLATION_MODELS_WHISPER_MODELS:-tiny,small}
+      - TRANSLATION_MODELS_WHISPER_BACKENDS=${TRANSLATION_MODELS_WHISPER_BACKENDS:-faster-whisper,openai-whisper}
+      - TRANSLATION_MODELS_TRANSLATION_MODELS=${TRANSLATION_MODELS_TRANSLATION_MODELS:-m2m100}
+      # CPU optimization
+      - OMP_NUM_THREADS=8
+      - MKL_NUM_THREADS=8
+
+    volumes:
+      # Persistent cache for AI models
+      - whisper-cache:/root/.cache/whisper
+      - huggingface-cache:/root/.cache/huggingface
+      # Persistent storage
+      - telegram-uploads:/app/uploads
+      - telegram-outputs:/app/outputs
+      - telegram-downloads:/app/downloads
+      # Optional: Override config
+      - ./config/application-production.yml:/app/config/application.yml:ro
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+    # Use host network mode for better performance (Mac limitation workaround)
+    network_mode: bridge
+
+    # Disable resource isolation for maximum performance
+    security_opt:
+      - seccomp:unconfined
+
+    # Use tmpfs for temporary processing (faster I/O)
+    tmpfs:
+      - /tmp:size=2G,mode=1777
+
+volumes:
+  whisper-cache:
+    driver: local
+  huggingface-cache:
+    driver: local
+  telegram-uploads:
+    driver: local
+  telegram-outputs:
+    driver: local
+  telegram-downloads:
+    driver: local
