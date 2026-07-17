@@ -10,9 +10,12 @@ import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
 import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory;
 import org.apache.hc.client5.http.ssl.TrustAllStrategy;
+import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.io.entity.StringEntity;
 import org.apache.hc.core5.ssl.SSLContextBuilder;
 import org.springframework.stereotype.Service;
+
+import java.nio.charset.StandardCharsets;
 
 import javax.net.ssl.SSLContext;
 import java.util.HashMap;
@@ -65,8 +68,7 @@ public class TelegramApiClient {
             String json = objectMapper.writeValueAsString(requestBody);
 
             HttpPost httpPost = new HttpPost(url);
-            httpPost.setHeader("Content-Type", "application/json");
-            httpPost.setEntity(new StringEntity(json));
+            httpPost.setEntity(new StringEntity(json, ContentType.APPLICATION_JSON));
 
             httpClient.execute(httpPost, response -> {
                 log.info("Message sent to chatId {}: {} (status: {})", chatId, text, response.getCode());
@@ -92,8 +94,7 @@ public class TelegramApiClient {
             String json = objectMapper.writeValueAsString(requestBody);
 
             HttpPost httpPost = new HttpPost(url);
-            httpPost.setHeader("Content-Type", "application/json");
-            httpPost.setEntity(new StringEntity(json));
+            httpPost.setEntity(new StringEntity(json, ContentType.APPLICATION_JSON));
 
             httpClient.execute(httpPost, response -> {
                 log.info("Message edited for chatId {}: {} (status: {})", chatId, text, response.getCode());
@@ -118,8 +119,7 @@ public class TelegramApiClient {
             String json = objectMapper.writeValueAsString(requestBody);
 
             HttpPost httpPost = new HttpPost(url);
-            httpPost.setHeader("Content-Type", "application/json");
-            httpPost.setEntity(new StringEntity(json));
+            httpPost.setEntity(new StringEntity(json, ContentType.APPLICATION_JSON));
 
             httpClient.execute(httpPost, response -> {
                 log.debug("Callback query answered (status: {})", response.getCode());
@@ -139,8 +139,7 @@ public class TelegramApiClient {
 
             String json = objectMapper.writeValueAsString(requestBody);
             HttpPost httpPost = new HttpPost(getFileUrl);
-            httpPost.setHeader("Content-Type", "application/json");
-            httpPost.setEntity(new StringEntity(json));
+            httpPost.setEntity(new StringEntity(json, ContentType.APPLICATION_JSON));
 
             String filePath = httpClient.execute(httpPost, response -> {
                 String responseBody = org.apache.hc.core5.http.io.entity.EntityUtils.toString(response.getEntity());
@@ -184,7 +183,7 @@ public class TelegramApiClient {
                     .addTextBody("chat_id", String.valueOf(chatId));
 
             if (caption != null) {
-                entity.addTextBody("caption", caption);
+                entity.addTextBody("caption", caption, ContentType.create("text/plain", StandardCharsets.UTF_8));
             }
 
             HttpPost httpPost = new HttpPost(url);
@@ -208,7 +207,7 @@ public class TelegramApiClient {
                     .addTextBody("chat_id", String.valueOf(chatId));
 
             if (caption != null) {
-                entity.addTextBody("caption", caption);
+                entity.addTextBody("caption", caption, ContentType.create("text/plain", StandardCharsets.UTF_8));
             }
 
             HttpPost httpPost = new HttpPost(url);
@@ -235,8 +234,7 @@ public class TelegramApiClient {
             String json = objectMapper.writeValueAsString(requestBody);
 
             HttpPost httpPost = new HttpPost(url);
-            httpPost.setHeader("Content-Type", "application/json");
-            httpPost.setEntity(new StringEntity(json));
+            httpPost.setEntity(new StringEntity(json, ContentType.APPLICATION_JSON));
 
             return httpClient.execute(httpPost, response -> {
                 String responseBody = org.apache.hc.core5.http.io.entity.EntityUtils.toString(response.getEntity());
@@ -264,8 +262,7 @@ public class TelegramApiClient {
             String json = objectMapper.writeValueAsString(requestBody);
 
             HttpPost httpPost = new HttpPost(url);
-            httpPost.setHeader("Content-Type", "application/json");
-            httpPost.setEntity(new StringEntity(json));
+            httpPost.setEntity(new StringEntity(json, ContentType.APPLICATION_JSON));
 
             httpClient.execute(httpPost, response -> {
                 log.debug("Progress message updated for chatId {} (messageId: {})", chatId, messageId);
